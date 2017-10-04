@@ -49,9 +49,6 @@ pygments_style = 'sphinx'
 # a list of builtin themes.
 html_theme = 'sphinx_rtd_theme'
 
-# Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = ['_themes']
-
 html_context = {
     'extra_css_files': ['_static/custom.css']
 }
@@ -94,5 +91,5 @@ texinfo_documents = [(
 intersphinx_mapping = {
     'python': ('http://docs.python.org/', None),
     'pycairo': ('http://www.cairographics.org/documentation/pycairo/2/', None),
-    'cairocffi': ('http://pythonhosted.org/cairocffi/', None),
+    'cairocffi': ('http://cairocffi.readthedocs.io/', None),
 }
