@@ -89,14 +89,13 @@ def _create_compressed_file_object(source):
 
     pdf_file_object = PdfDict(
         Type=PdfName('EmbeddedFile'), Filter=PdfName('FlateDecode'))
-    pdf_file_object.stream = ''
+    pdf_file_object.stream = b''
     size = 0
     for data in iter(lambda: source.read(4096), b''):
         size += len(data)
         md5.update(data)
-        # TODO: Remove ".decode('latin1')" as soon as "stream" allows bytes
-        pdf_file_object.stream += compress.compress(data).decode('latin1')
-    pdf_file_object.stream += compress.flush(zlib.Z_FINISH).decode('latin1')
+        pdf_file_object.stream += compress.compress(data)
+    pdf_file_object.stream += compress.flush(zlib.Z_FINISH)
     pdf_file_object.Params = PdfDict(
         CheckSum=PdfString('<{}>'.format(md5.hexdigest())), Size=size)
     return pdf_file_object
@@ -186,6 +185,7 @@ def _create_pdf_attachment(attachment, url_fetcher):
             if isinstance(source, bytes):
                 source = io.BytesIO(source)
             pdf_file_object = _create_compressed_file_object(source)
+            print(pdf_file_object)
     except URLFetchingError as exc:
         LOGGER.error('Failed to load attachment: %s', exc)
         return None
@@ -322,17 +322,25 @@ def write_pdf_metadata(document, fileobj, scale, metadata, attachments,
             setattr(trailer.Info, key, value)
 
     for page, document_page in zip(pages, document.pages):
-        x, y, width, height = (float(value) for value in page.MediaBox)
-        bleed = document_page.bleed.get_scaled(0.75)  # Pixels into points
-        # TODO please add comment why thre are dividing by 2.
-        page.BleedBox = PdfArray((
-            x + bleed.left / 2, y + bleed.top / 2,
-            width + bleed.left + bleed.right, height + bleed.top + bleed.bottom
-        ))
-        page.TrimBox = PdfArray((
-            x + bleed.left, y + bleed.top,
-            width + bleed.left + bleed.right, height + bleed.top + bleed.bottom
-        ))
+        left, top, right, bottom = (float(value) for value in page.MediaBox)
+        # Convert pixels into points
+        bleed = {
+            key: value * 0.75 for key, value in document_page.bleed.items()}
+
+        trim_left = left + bleed['left']
+        trim_top = top + bleed['top']
+        trim_right = right - bleed['right']
+        trim_bottom = bottom - bleed['bottom']
+        page.TrimBox = PdfArray((trim_left, trim_top, trim_right, trim_bottom))
+
+        # Arbitrarly set PDF BleedBox between CSS bleed box (PDF MediaBox) and
+        # CSS page box (PDF TrimBox), at most 10 points from the TrimBox.
+        bleed_left = trim_left - min(10, bleed['left'])
+        bleed_top = trim_top - min(10, bleed['top'])
+        bleed_right = trim_right + min(10, bleed['right'])
+        bleed_bottom = trim_bottom + min(10, bleed['bottom'])
+        page.BleedBox = PdfArray(
+            (bleed_left, bleed_top, bleed_right, bleed_bottom))
 
     fileobj.seek(0)
     PdfWriter().write(fileobj, trailer=trailer)

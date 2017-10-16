@@ -22,8 +22,8 @@ WeasyPrint |version| depends on:
 .. _CFFI: https://cffi.readthedocs.io/
 .. _html5lib: https://html5lib.readthedocs.io/
 .. _cairocffi: https://cairocffi.readthedocs.io/
-.. _tinycss2: https://pypi.python.org/pypi/tinycss2
-.. _cssselect2: https://pypi.python.org/pypi/cssselect2
+.. _tinycss2: https://tinycss2.readthedocs.io/
+.. _cssselect2: https://cssselect2.readthedocs.io/
 .. _CairoSVG: http://cairosvg.org/
 .. _Pyphen: http://pyphen.org/
 .. _pdfrw: https://github.com/pmaupin/pdfrw/
@@ -73,7 +73,7 @@ WeasyPrint! Otherwise, please copy the full error message and
        The test suite passes on cairo 1.8 and 1.10 with some tests marked as
        “expected failures” due to behavior changes or bugs in cairo.
 
-.. [#] Without it, PNG and SVG are the only supported image format:
+.. [#] Without it, PNG and SVG are the only supported image formats.
        JPEG, GIF and others are not available.
 
 
